@@ -876,5 +876,37 @@ describe('Menu module', () => {
         }, handlerTimeout)
       })
     })
+
+    testFn('behave according to \'registerAccelerator\' property', () => {
+      let clickInvoked = false
+      const menu = Menu.buildFromTemplate([
+        {
+          label: 'Test',
+          submenu: [
+            {
+              label: 'Test Item',
+              accelerator: 'Ctrl+T',
+              registerAccelerator: false,
+              click: () => { clickInvoked = true },
+              id: 'test'
+            }
+          ]
+        }
+      ])
+      Menu.setApplicationMenu(menu)
+      expect(Menu.getApplicationMenu()).to.not.be.null()
+
+      // test will succeed, only when the menu accelerator action is NOT triggered
+      require('robotjs').keyTap('t', 'control')
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (clickInvoked) {
+            reject(new Error('handler shouldn\'t be invoked by keypress'))
+          } else {
+            resolve()
+          }
+        }, handlerTimeout)
+      })
+    })
   })
 })
