@@ -282,14 +282,16 @@ static base::scoped_nsobject<NSMenu> recentDocumentsMenuSwap_;
     NSValue* modelObject = [NSValue valueWithPointer:model];
     [item setRepresentedObject:modelObject];  // Retains |modelObject|.
     ui::Accelerator accelerator;
-    if (model->GetAcceleratorAtWithParams(index, useDefaultAccelerator_,
-                                          &accelerator)) {
-      NSString* key_equivalent;
-      NSUInteger modifier_mask;
-      GetKeyEquivalentAndModifierMaskFromAccelerator(
-          accelerator, &key_equivalent, &modifier_mask);
-      [item setKeyEquivalent:key_equivalent];
-      [item setKeyEquivalentModifierMask:modifier_mask];
+    if (model->ShouldRegisterAcceleratorAt(index)) {
+      if (model->GetAcceleratorAtWithParams(index, useDefaultAccelerator_,
+                                            &accelerator)) {
+        NSString* key_equivalent;
+        NSUInteger modifier_mask;
+        GetKeyEquivalentAndModifierMaskFromAccelerator(
+            accelerator, &key_equivalent, &modifier_mask);
+        [item setKeyEquivalent:key_equivalent];
+        [item setKeyEquivalentModifierMask:modifier_mask];
+      }
     }
 
     if (@available(macOS 10.13, *)) {
