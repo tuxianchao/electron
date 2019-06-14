@@ -836,6 +836,7 @@ describe('Menu module', () => {
   })
 
   describe('menu accelerators', () => {
+    const handlerTimeout = 500
     let testFn = it
     try {
       // We have other tests that check if native modules work, if we fail to require
@@ -844,16 +845,9 @@ describe('Menu module', () => {
     } catch (err) {
       testFn = it.skip
     }
-    const sendRobotjsKey = (key, modifiers = [], delay = 500) => {
-      return new Promise((resolve, reject) => {
-        require('robotjs').keyTap(key, modifiers)
-        setTimeout(() => {
-          resolve()
-        }, delay)
-      })
-    }
 
-    testFn('menu accelerators perform the specified action', async () => {
+    testFn('perform the specified action', () => {
+      let clickInvoked = false
       const menu = Menu.buildFromTemplate([
         {
           label: 'Test',
@@ -861,11 +855,7 @@ describe('Menu module', () => {
             {
               label: 'Test Item',
               accelerator: 'Ctrl+T',
-              click: () => {
-                // Test will succeed, only when the menu accelerator action
-                // is triggered
-                Promise.resolve()
-              },
+              click: () => { clickInvoked = true },
               id: 'test'
             }
           ]
@@ -873,7 +863,18 @@ describe('Menu module', () => {
       ])
       Menu.setApplicationMenu(menu)
       expect(Menu.getApplicationMenu()).to.not.be.null()
-      await sendRobotjsKey('t', 'control')
+
+      // test will succeed, only when the menu accelerator action is triggered
+      require('robotjs').keyTap('t', 'control')
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (clickInvoked) {
+            resolve()
+          } else {
+            reject(new Error('timeout: handler not invoked by keypress'))
+          }
+        }, handlerTimeout)
+      })
     })
   })
 })
