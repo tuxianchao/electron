@@ -42,7 +42,7 @@ index 775b64a8d20f89845812852a2904a1e6875c2b4a..5235b57bbf44fc7b30ca6943c43a290f
    // another SiteInstance for the same site.
    void RegisterSiteInstance(SiteInstanceImpl* site_instance);
 diff --git a/content/browser/frame_host/render_frame_host_manager.cc b/content/browser/frame_host/render_frame_host_manager.cc
-index 297b61198dd46114b3d8c89488a71ed01aa299c4..40b848a8b448bed2d167bf5f6c0f25971b603ed2 100644
+index 297b61198dd46114b3d8c89488a71ed01aa299c4..a49866aeb424a98b22b42ca427050631347a5c49 100644
 --- a/content/browser/frame_host/render_frame_host_manager.cc
 +++ b/content/browser/frame_host/render_frame_host_manager.cc
 @@ -2127,6 +2127,20 @@ bool RenderFrameHostManager::InitRenderView(
@@ -66,12 +66,13 @@ index 297b61198dd46114b3d8c89488a71ed01aa299c4..40b848a8b448bed2d167bf5f6c0f2597
    // First, check if the navigation can switch SiteInstances. If not, the
    // navigation should use the current SiteInstance.
    SiteInstance* current_site_instance = render_frame_host_->GetSiteInstance();
-@@ -2158,6 +2172,53 @@ RenderFrameHostManager::GetSiteInstanceForNavigationRequest(
+@@ -2158,6 +2172,61 @@ RenderFrameHostManager::GetSiteInstanceForNavigationRequest(
                                                request.common_params().url);
      no_renderer_swap_allowed |=
          request.from_begin_navigation() && !can_renderer_initiate_transfer;
 +
 +    if (!GetContentClient()->browser()->CanUseCustomSiteInstance()) {
++      bool has_navigation_started = request.state() != NavigationRequest::NOT_STARTED;
 +      bool has_response_started =
 +          (request.state() == NavigationRequest::RESPONSE_STARTED ||
 +          request.state() == NavigationRequest::FAILED) &&
@@ -79,11 +80,14 @@ index 297b61198dd46114b3d8c89488a71ed01aa299c4..40b848a8b448bed2d167bf5f6c0f2597
 +      // Gives user a chance to choose a custom site instance.
 +      SiteInstance* affinity_site_instance = nullptr;
 +      scoped_refptr<SiteInstance> overriden_site_instance;
++      bool should_register_site_instance = false;
 +      ContentBrowserClient::SiteInstanceForNavigationType siteInstanceType =
 +          GetContentClient()->browser()->ShouldOverrideSiteInstanceForNavigation(
 +              current_frame_host(), speculative_frame_host(), browser_context,
-+              request.common_params().url, has_response_started,
++              request.common_params().url, has_navigation_started,
++              has_response_started,
 +              &affinity_site_instance);
++
 +      switch (siteInstanceType) {
 +        case ContentBrowserClient::SiteInstanceForNavigationType::
 +            FORCE_CANDIDATE_OR_NEW:
@@ -91,7 +95,13 @@ index 297b61198dd46114b3d8c89488a71ed01aa299c4..40b848a8b448bed2d167bf5f6c0f2597
 +              candidate_site_instance
 +                  ? candidate_site_instance
 +                  : current_site_instance->CreateRelatedSiteInstance(
-+                                              request.common_params().url);
++                        request.common_params().url);
++          should_register_site_instance = true;
++          break;
++        case ContentBrowserClient::SiteInstanceForNavigationType::FORCE_NEW:
++          overriden_site_instance = current_site_instance->CreateRelatedSiteInstance(
++              request.common_params().url);
++          should_register_site_instance = true;
 +          break;
 +        case ContentBrowserClient::SiteInstanceForNavigationType::FORCE_CURRENT:
 +          overriden_site_instance = render_frame_host_->GetSiteInstance();
@@ -108,9 +118,7 @@ index 297b61198dd46114b3d8c89488a71ed01aa299c4..40b848a8b448bed2d167bf5f6c0f2597
 +          break;
 +      }
 +      if (overriden_site_instance) {
-+        if (siteInstanceType ==
-+            ContentBrowserClient::SiteInstanceForNavigationType::
-+                FORCE_CANDIDATE_OR_NEW) {
++        if (should_register_site_instance) {
 +          GetContentClient()->browser()->RegisterPendingSiteInstance(
 +              render_frame_host_.get(), overriden_site_instance.get());
 +        }
@@ -120,7 +128,7 @@ index 297b61198dd46114b3d8c89488a71ed01aa299c4..40b848a8b448bed2d167bf5f6c0f2597
    } else {
      // Subframe navigations will use the current renderer, unless specifically
      // allowed to swap processes.
-@@ -2169,23 +2230,28 @@ RenderFrameHostManager::GetSiteInstanceForNavigationRequest(
+@@ -2169,23 +2238,28 @@ RenderFrameHostManager::GetSiteInstanceForNavigationRequest(
    if (no_renderer_swap_allowed && !should_swap_for_error_isolation)
      return scoped_refptr<SiteInstance>(current_site_instance);
  
@@ -179,10 +187,10 @@ index a46901055bdf17b6b0dab14edf753b234dc04a12..113660b6eeff81d56a0415b0fa16211e
    size_t GetRelatedActiveContentsCount() override;
    bool RequiresDedicatedProcess() override;
 diff --git a/content/public/browser/content_browser_client.cc b/content/public/browser/content_browser_client.cc
-index 2dd31166cc52ccb528b338b63fde7d2fb4bbf63d..ce64276225d5b0acf684e9e70c600a64a56fe96e 100644
+index 2dd31166cc52ccb528b338b63fde7d2fb4bbf63d..34d88fc1a8d6dec0ae4506a3a97c2fa1a32bda01 100644
 --- a/content/public/browser/content_browser_client.cc
 +++ b/content/public/browser/content_browser_client.cc
-@@ -52,6 +52,20 @@ void OverrideOnBindInterface(const service_manager::BindSourceInfo& remote_info,
+@@ -52,6 +52,21 @@ void OverrideOnBindInterface(const service_manager::BindSourceInfo& remote_info,
                                                           handle);
  }
  
@@ -195,6 +203,7 @@ index 2dd31166cc52ccb528b338b63fde7d2fb4bbf63d..ce64276225d5b0acf684e9e70c600a64
 +    content::RenderFrameHost* speculative_rfh,
 +    content::BrowserContext* browser_context,
 +    const GURL& url,
++    bool has_navigation_started,
 +    bool has_request_started,
 +    content::SiteInstance** affinity_site_instance) const {
 +  return SiteInstanceForNavigationType::ASK_CHROMIUM;
@@ -204,10 +213,10 @@ index 2dd31166cc52ccb528b338b63fde7d2fb4bbf63d..ce64276225d5b0acf684e9e70c600a64
      const MainFunctionParams& parameters) {
    return nullptr;
 diff --git a/content/public/browser/content_browser_client.h b/content/public/browser/content_browser_client.h
-index 04bfc1a4a804d1f5aa28f894e2feb816bbe80ffc..5bf7340b106bd3ce826ff3322106ef94cbe19d29 100644
+index 04bfc1a4a804d1f5aa28f894e2feb816bbe80ffc..2a0f762f33eafb3126378456e6a54edd014aebed 100644
 --- a/content/public/browser/content_browser_client.h
 +++ b/content/public/browser/content_browser_client.h
-@@ -211,8 +211,41 @@ CONTENT_EXPORT void OverrideOnBindInterface(
+@@ -211,8 +211,45 @@ CONTENT_EXPORT void OverrideOnBindInterface(
  // the observer interfaces.)
  class CONTENT_EXPORT ContentBrowserClient {
   public:
@@ -219,6 +228,9 @@ index 04bfc1a4a804d1f5aa28f894e2feb816bbe80ffc..5bf7340b106bd3ce826ff3322106ef94
 +
 +    // Use the current site instance for the navigation.
 +    FORCE_CURRENT,
++
++    // Use a new, unrelated site instance.
++    FORCE_NEW,
 +
 +    // Use the provided affinity site instance for the navigation.
 +    FORCE_AFFINITY,
@@ -238,6 +250,7 @@ index 04bfc1a4a804d1f5aa28f894e2feb816bbe80ffc..5bf7340b106bd3ce826ff3322106ef94
 +      content::RenderFrameHost* speculative_rfh,
 +      content::BrowserContext* browser_context,
 +      const GURL& url,
++      bool has_navigation_started,
 +      bool has_request_started,
 +      content::SiteInstance** affinity_site_instance) const;
 +
