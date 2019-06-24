@@ -12,7 +12,7 @@
 #include "base/mac/scoped_nsobject.h"
 #include "shell/browser/ui/tray_icon.h"
 
-// @class AtomMenuController;
+@class AtomMenuController;
 @class StatusItemView;
 
 namespace electron {
@@ -45,10 +45,10 @@ class TrayIconCocoa : public TrayIcon, public AtomMenuModel::Observer {
   base::scoped_nsobject<StatusItemView> status_item_view_;
 
   // Status menu shown when right-clicking the system icon.
-  // base::scoped_nsobject<AtomMenuController> menu_;
+  base::scoped_nsobject<AtomMenuController> menu_;
 
   // Used for unregistering observer.
-  // AtomMenuModel* menu_model_ = nullptr;  // weak ref.
+  AtomMenuModel* menu_model_ = nullptr;  // weak ref.
 
   base::WeakPtrFactory<TrayIconCocoa> weak_factory_;
 
