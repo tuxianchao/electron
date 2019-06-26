@@ -1,17 +1,19 @@
-import { types } from 'util'
 import { ipcMainInternal } from '@electron/internal/browser/ipc-main-internal'
 import * as errorUtils from '@electron/internal/common/error-utils'
 
 type IPCHandler = (event: ElectronInternal.IpcMainInternalEvent, ...args: any[]) => any
 
-const callHandler = async function (handler: IPCHandler, event: ElectronInternal.IpcMainInternalEvent, args: any[], reply: (args: any[]) => void) {
+const callHandler = async function (shouldAwait: boolean, handler: IPCHandler, event: ElectronInternal.IpcMainInternalEvent, args: any[], reply: (args: any[]) => void) {
   try {
     let result
     // The handler may be a normal function that returns a Promise (for example
     // WebContents.loadURL), if we call `await handler` then it will wait until
     // the returned Promise gets resolved (in the case of loadURL, it would wait
     // until URL is fully loaded).
-    if (types.isAsyncFunction(handler)) {
+    //
+    // So the user must explicitly specify whether the handler should be awaited
+    // for.
+    if (shouldAwait) {
       result = await handler(event, ...args)
     } else {
       result = handler(event, ...args)
@@ -22,12 +24,9 @@ const callHandler = async function (handler: IPCHandler, event: ElectronInternal
   }
 }
 
-// Note that this helper only await for async functions, for normal functions
-// that return Promise, the returned Promise will be returned instead of
-// getting await.
-export const handle = function <T extends IPCHandler> (channel: string, handler: T) {
+const handleWrapper = function <T extends IPCHandler> (shouldAwait: boolean, channel: string, handler: T) {
   ipcMainInternal.on(channel, (event, requestId, ...args) => {
-    callHandler(handler, event, args, responseArgs => {
+    callHandler(shouldAwait, handler, event, args, responseArgs => {
       if (requestId) {
         event._replyInternal(`${channel}_RESPONSE_${requestId}`, ...responseArgs)
       } else {
@@ -36,6 +35,12 @@ export const handle = function <T extends IPCHandler> (channel: string, handler:
     })
   })
 }
+
+// The passed handler must be normal (non-async) function.
+export const handle = handleWrapper.bind(null, false)
+
+// The passed handler must be async function, and will be awaited for.
+export const handleAsync = handleWrapper.bind(null, true)
 
 let nextId = 0
 
