@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "base/message_loop/message_loop.h"
+#include "base/message_loop/message_pump_mac.h"
 #include "base/strings/sys_string_conversions.h"
 #include "base/task/post_task.h"
 #include "content/public/browser/browser_task_traits.h"
