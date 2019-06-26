@@ -22,6 +22,9 @@ const callHandler = async function (handler: IPCHandler, event: ElectronInternal
   }
 }
 
+// Note that this helper only await for async functions, for normal functions
+// that return Promise, the returned Promise will be returned instead of
+// getting await.
 export const handle = function <T extends IPCHandler> (channel: string, handler: T) {
   ipcMainInternal.on(channel, (event, requestId, ...args) => {
     callHandler(handler, event, args, responseArgs => {
