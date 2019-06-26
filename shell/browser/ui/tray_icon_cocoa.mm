@@ -67,6 +67,7 @@
              owner:self
           userInfo:nil]);
   [self addTrackingArea:trackingArea_];
+  // TODO: remove LOG
   LOG(INFO) << "update tracking rect: "
             << [NSStringFromRect(trackingArea_.get().rect) UTF8String];
 }
@@ -281,6 +282,7 @@ std::string TrayIconCocoa::GetTitle() {
 }
 
 void TrayIconCocoa::SetHighlightMode(TrayIcon::HighlightMode mode) {
+  // TODO: remove LOG & method?
   LOG(INFO) << "Not supported.";
 }
 
