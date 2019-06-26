@@ -1,3 +1,4 @@
+import { types } from 'util'
 import { ipcMainInternal } from '@electron/internal/browser/ipc-main-internal'
 import * as errorUtils from '@electron/internal/common/error-utils'
 
@@ -5,7 +6,16 @@ type IPCHandler = (event: ElectronInternal.IpcMainInternalEvent, ...args: any[])
 
 const callHandler = async function (handler: IPCHandler, event: ElectronInternal.IpcMainInternalEvent, args: any[], reply: (args: any[]) => void) {
   try {
-    const result = await handler(event, ...args)
+    let result
+    // The handler may be a normal function that returns a Promise (for example
+    // WebContents.loadURL), if we call `await handler` then it will wait until
+    // the returned Promise gets resolved (in the case of loadURL, it would wait
+    // until URL is fully loaded).
+    if (types.isAsyncFunction(handler)) {
+      result = await handler(event, ...args)
+    } else {
+      result = handler(event, ...args)
+    }
     reply([null, result])
   } catch (error) {
     reply([errorUtils.serialize(error)])
