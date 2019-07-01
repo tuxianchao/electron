@@ -514,6 +514,7 @@ filenames = {
     "shell/common/gin_converters/gin_net_converter.cc",
     "shell/common/gin_converters/gin_net_converter.h",
     "shell/common/gin_converters/gin_once_callback.h",
+    "shell/common/gin_converters/gin_set_converter.h",
     "shell/common/gin_converters/gin_v8_value_converter.cc",
     "shell/common/gin_converters/gin_v8_value_converter.h",
     "shell/common/gin_converters/gin_value_converter.cc",
