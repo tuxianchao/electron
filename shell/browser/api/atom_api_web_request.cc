@@ -86,8 +86,8 @@ void WebRequest::SetListener(Method method, Event type, gin::Arguments* args) {
   // { urls }.
   URLPatterns patterns;
   gin::Dictionary dict(NULL);
-  // args->GetNext(&dict) && dict.Get("urls", &patterns); // TODO(deermichel):
-  // doesnt work?? err: pass null or func
+  // TODO(deermichel): doesnt work?? err: pass null or func
+  // args->GetNext(&dict) && dict.Get("urls", &patterns);
 
   // Function or null.
   v8::Local<v8::Value> value;
@@ -120,12 +120,14 @@ gin::Handle<WebRequest> WebRequest::Create(
 gin::ObjectTemplateBuilder WebRequest::GetObjectTemplateBuilder(
     v8::Isolate* isolate) {
   return gin::Wrappable<WebRequest>::GetObjectTemplateBuilder(isolate)
-      // .SetMethod("onBeforeRequest",
-      // &WebRequest::SetResponseListener<AtomNetworkDelegate::kOnBeforeRequest>)
-      // .SetMethod("onBeforeSendHeaders",
-      // &WebRequest::SetResponseListener<AtomNetworkDelegate::kOnBeforeSendHeaders>;
-      // .SetMethod("onHeadersReceived",
-      // &WebRequest::SetResponseListener<AtomNetworkDelegate::kOnHeadersReceived>)
+      .SetMethod("onBeforeRequest", &WebRequest::SetResponseListener<
+                                        AtomNetworkDelegate::kOnBeforeRequest>)
+      .SetMethod("onBeforeSendHeaders",
+                 &WebRequest::SetResponseListener<
+                     AtomNetworkDelegate::kOnBeforeSendHeaders>)
+      .SetMethod("onHeadersReceived",
+                 &WebRequest::SetResponseListener<
+                     AtomNetworkDelegate::kOnHeadersReceived>)
       .SetMethod(
           "onSendHeaders",
           &WebRequest::SetSimpleListener<AtomNetworkDelegate::kOnSendHeaders>)

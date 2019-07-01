@@ -17,6 +17,12 @@
 
 namespace gin {
 
+template <typename T>
+v8::Local<v8::Value> ConvertToV8(v8::Isolate* isolate, T&& input) {
+  return Converter<typename std::remove_reference<T>::type>::ToV8(
+      isolate, std::move(input));
+}
+
 namespace internal {
 
 template <typename T>
@@ -125,6 +131,22 @@ v8::Local<v8::Value> BindFunctionWith(v8::Isolate* isolate,
                                       v8::Local<v8::Value> arg1,
                                       v8::Local<v8::Value> arg2);
 
+// Classes for generating and storing an argument pack of integer indices
+// (based on well-known "indices trick", see: http://goo.gl/bKKojn):
+// template <size_t... indices>
+// struct IndicesHolder {};
+
+// template <size_t requested_index, size_t... indices>
+// struct IndicesGenerator {
+//   using type = typename IndicesGenerator<requested_index - 1,
+//                                          requested_index - 1,
+//                                          indices...>::type;
+// };
+// template <size_t... indices>
+// struct IndicesGenerator<0, indices...> {
+//   using type = IndicesHolder<indices...>;
+// };
+
 // Calls callback with Arguments.
 template <typename Sig>
 struct NativeFunctionInvoker {};
@@ -134,7 +156,7 @@ struct NativeFunctionInvoker<ReturnType(ArgTypes...)> {
   static void Go(base::Callback<ReturnType(ArgTypes...)> val, Arguments* args) {
     // using Indices = typename IndicesGenerator<sizeof...(ArgTypes)>::type;
     using Indices = std::index_sequence_for<ArgTypes...>;
-    Invoker<Indices, ArgTypes...> invoker(args, 0);
+    Invoker<Indices, ArgTypes...> invoker(args, {0});
     if (invoker.IsOK())
       invoker.DispatchToCallback(val);
   }
