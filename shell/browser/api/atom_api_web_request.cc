@@ -10,13 +10,12 @@
 #include "base/task/post_task.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
-// #include "gin/converter.h"
 #include "gin/dictionary.h"
 #include "shell/browser/atom_browser_context.h"
 #include "shell/browser/net/atom_network_delegate.h"
-// #include "shell/common/native_mate_converters/net_converter.h"
-// #include "shell/common/native_mate_converters/once_callback.h"
-// #include "shell/common/native_mate_converters/value_converter.h"
+#include "shell/common/gin_converters/gin_net_converter.h"
+#include "shell/common/gin_converters/gin_once_callback.h"
+#include "shell/common/gin_converters/gin_value_converter.h"
 
 using content::BrowserThread;
 
@@ -118,23 +117,23 @@ gin::Handle<WebRequest> WebRequest::Create(
 // static
 gin::ObjectTemplateBuilder WebRequest::GetObjectTemplateBuilder(
     v8::Isolate* isolate) {
-  return gin::Wrappable<WebRequest>::GetObjectTemplateBuilder(isolate)
-      // .SetMethod("onBeforeRequest",
-      // &WebRequest::SetResponseListener<AtomNetworkDelegate::kOnBeforeRequest>)
-      // .SetMethod("onBeforeSendHeaders",
-      // &WebRequest::SetResponseListener<AtomNetworkDelegate::kOnBeforeSendHeaders>)
-      // .SetMethod("onHeadersReceived",
-      // &WebRequest::SetResponseListener<AtomNetworkDelegate::kOnHeadersReceived>)
-      // .SetMethod("onSendHeaders",
-      // &WebRequest::SetSimpleListener<AtomNetworkDelegate::kOnSendHeaders>)
-      // .SetMethod("onBeforeRedirect",
-      // &WebRequest::SetSimpleListener<AtomNetworkDelegate::kOnBeforeRedirect>)
-      // .SetMethod("onResponseStarted",
-      // &WebRequest::SetSimpleListener<AtomNetworkDelegate::kOnResponseStarted>)
-      // .SetMethod("onCompleted",
-      // &WebRequest::SetSimpleListener<AtomNetworkDelegate::kOnCompleted>)
-      .SetMethod("onErrorOccurred", &WebRequest::SetSimpleListener<
-                                        AtomNetworkDelegate::kOnErrorOccurred>);
+  return gin::Wrappable<WebRequest>::GetObjectTemplateBuilder(isolate);
+  // .SetMethod("onBeforeRequest",
+  // &WebRequest::SetResponseListener<AtomNetworkDelegate::kOnBeforeRequest>)
+  // .SetMethod("onBeforeSendHeaders",
+  // &WebRequest::SetResponseListener<AtomNetworkDelegate::kOnBeforeSendHeaders>);
+  // .SetMethod("onHeadersReceived",
+  // &WebRequest::SetResponseListener<AtomNetworkDelegate::kOnHeadersReceived>)
+  // .SetMethod("onSendHeaders",
+  // &WebRequest::SetSimpleListener<AtomNetworkDelegate::kOnSendHeaders>)
+  // .SetMethod("onBeforeRedirect",
+  // &WebRequest::SetSimpleListener<AtomNetworkDelegate::kOnBeforeRedirect>)
+  // .SetMethod("onResponseStarted",
+  // &WebRequest::SetSimpleListener<AtomNetworkDelegate::kOnResponseStarted>)
+  // .SetMethod("onCompleted",
+  // &WebRequest::SetSimpleListener<AtomNetworkDelegate::kOnCompleted>)
+  // .SetMethod("onErrorOccurred", &WebRequest::SetSimpleListener<
+  //                                   AtomNetworkDelegate::kOnErrorOccurred>);
 }
 
 // void WebRequest::BuildPrototype(v8::Isolate* isolate,
