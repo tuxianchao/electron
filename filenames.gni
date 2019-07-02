@@ -118,6 +118,8 @@ filenames = {
     "shell/browser/api/event_emitter.h",
     "shell/browser/api/stream_subscriber.cc",
     "shell/browser/api/stream_subscriber.h",
+    "shell/browser/api/trackable_object_gin.cc",
+    "shell/browser/api/trackable_object_gin.h",
     "shell/browser/api/trackable_object.cc",
     "shell/browser/api/trackable_object.h",
     "shell/browser/api/frame_subscriber.cc",
