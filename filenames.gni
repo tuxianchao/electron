@@ -520,6 +520,7 @@ filenames = {
     "shell/common/gin_converters/net_converter_gin.cc",
     "shell/common/gin_converters/net_converter_gin.h",
     "shell/common/gin_converters/once_callback_gin.h",
+    "shell/common/gin_converters/std_converters_gin.h",
     "shell/common/gin_converters/v8_value_converter_gin.cc",
     "shell/common/gin_converters/v8_value_converter_gin.h",
     "shell/common/gin_converters/value_converter_gin.cc",

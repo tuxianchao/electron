@@ -4,8 +4,8 @@
 
 // TODO(deermichel): remove _gin suffix after removing mate
 
-#ifndef SHELL_BROWSER_API_EVENT_EMITTER_H_
-#define SHELL_BROWSER_API_EVENT_EMITTER_H_
+#ifndef SHELL_BROWSER_API_EVENT_EMITTER_GIN_H_
+#define SHELL_BROWSER_API_EVENT_EMITTER_GIN_H_
 
 #include <utility>
 #include <vector>
@@ -49,7 +49,7 @@ class EventEmitter : public Wrappable<T> {
   v8::Local<v8::Object> GetWrapper() const {
     return Wrappable<T>::GetWrapper();
   }
-  v8::MaybeLocal<v8::Object> GetWrapper(v8::Isolate* isolate) const {
+  v8::MaybeLocal<v8::Object> GetWrapper(v8::Isolate* isolate) {
     return Wrappable<T>::GetWrapper(isolate);
   }
 
@@ -125,4 +125,4 @@ class EventEmitter : public Wrappable<T> {
 
 }  // namespace gin
 
-#endif  // SHELL_BROWSER_API_EVENT_EMITTER_H_
+#endif  // SHELL_BROWSER_API_EVENT_EMITTER_GIN_H_

@@ -4,8 +4,8 @@
 
 // TODO(deermichel): remove _gin suffix after removing mate
 
-#ifndef SHELL_BROWSER_API_TRACKABLE_OBJECT_H_
-#define SHELL_BROWSER_API_TRACKABLE_OBJECT_H_
+#ifndef SHELL_BROWSER_API_TRACKABLE_OBJECT_GIN_H_
+#define SHELL_BROWSER_API_TRACKABLE_OBJECT_GIN_H_
 
 #include <vector>
 
@@ -145,4 +145,4 @@ electron::KeyWeakMap<int32_t>* TrackableObject<T>::weak_map_ = nullptr;
 
 }  // namespace gin
 
-#endif  // SHELL_BROWSER_API_TRACKABLE_OBJECT_H_
+#endif  // SHELL_BROWSER_API_TRACKABLE_OBJECT_GIN_H_

@@ -4,8 +4,8 @@
 
 // TODO(deermichel): remove _gin suffix after removing mate
 
-#ifndef SHELL_COMMON_GIN_CONVERTERS_CALLBACK_H_
-#define SHELL_COMMON_GIN_CONVERTERS_CALLBACK_H_
+#ifndef SHELL_COMMON_GIN_CONVERTERS_CALLBACK_GIN_H_
+#define SHELL_COMMON_GIN_CONVERTERS_CALLBACK_GIN_H_
 
 #include <utility>
 #include <vector>
@@ -17,6 +17,7 @@
 #include "gin/function_template.h"
 // #include "native_mate/scoped_persistent.h" // TODO(deermichel): needed?
 #include "shell/common/api/locker_gin.h"
+#include "shell/common/gin_converters/std_converters_gin.h"
 
 namespace gin {
 
@@ -138,7 +139,7 @@ struct NativeFunctionInvoker<ReturnType(ArgTypes...)> {
     // TODO(deermichel): correct?
     // using Indices = typename IndicesGenerator<sizeof...(ArgTypes)>::type;
     using Indices = std::index_sequence_for<ArgTypes...>;
-    Invoker<Indices, ArgTypes...> invoker(args, 0);
+    Invoker<Indices, ArgTypes...> invoker(args, {0});
     if (invoker.IsOK())
       invoker.DispatchToCallback(val);
   }
@@ -182,4 +183,4 @@ v8::Local<v8::Value> CallbackToV8(v8::Isolate* isolate,
 
 }  // namespace gin
 
-#endif  // SHELL_COMMON_GIN_CONVERTERS_CALLBACK_H_
+#endif  // SHELL_COMMON_GIN_CONVERTERS_CALLBACK_GIN_H_
